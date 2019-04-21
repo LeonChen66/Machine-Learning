@@ -13,6 +13,7 @@ from keras.layers import Embedding
 from keras.layers.merge import Concatenate
 import matplotlib.pyplot as plt
 from nlp_preprocess import *
+from keras.layers import TimeDistributed, CuDNNLSTM, SpatialDropout1D
 
 
 def buildNNmodel(input_dim = 10000):
@@ -103,6 +104,25 @@ def Bi_RNN(word_index, embedding_matrix, embedding_dim=50):
 
     # try using different optimizers and different optimizer configs
     model.compile('adam', 'binary_crossentropy', metrics=['accuracy'])
+    return model
+
+
+def Bi_RNN2(word_index, embedding_matrix, embedding_dim=50):
+    model = Sequential()
+    model.add(InputLayer(input_shape=(49,)))
+    model.add(Embedding(len(word_index)+1, embedding_dim, weights=[embedding_matrix],
+                        input_length=49, name="embedding", trainable=True))
+    model.add(SpatialDropout1D(0.4))
+    model.add(Bidirectional(CuDNNLSTM(64, return_sequences=True)))
+    model.add(Bidirectional(CuDNNLSTM(32)))
+    model.add(Dropout(0.5))
+    model.add(Dense(1, activation='sigmoid'))
+    model.compile(loss='binary_crossentropy',
+                  optimizer='adam', metrics=['acc'])
+
+    # try using different optimizers and different optimizer configs
+    model.compile(loss='binary_crossentropy',
+                  optimizer='adam', metrics=['acc'])
     return model
 
 def plot_loss(history):
